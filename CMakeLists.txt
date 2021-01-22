@@ -92,6 +92,14 @@ set(PHYSFS_SRCS
     ${PHYSFS_M_SRCS}
 )
 
+if(VITA)
+    set(PHYSFS_SRCS ${PHYSFS_SRCS} src/physfs_platform_vita.c)
+    if(DOLCESDK)
+        add_definitions("-D_DOLCESDK")
+    else()
+        add_definitions("-D_VITASDK")
+    endif()
+endif()
 
 # Archivers ...
 # These are (mostly) on by default now, so these options are only useful for
@@ -169,6 +177,11 @@ if(PHYSFS_BUILD_STATIC)
 endif()
 
 option(PHYSFS_BUILD_SHARED "Build shared library" TRUE)
+
+if(VITA)
+    set(PHYSFS_BUILD_SHARED FALSE)
+endif()
+
 if(PHYSFS_BUILD_SHARED)
     add_library(physfs SHARED ${PHYSFS_SRCS})
     set_target_properties(physfs PROPERTIES MACOSX_RPATH 1)
@@ -194,6 +207,11 @@ endif()
 
 option(PHYSFS_BUILD_TEST "Build stdio test program." TRUE)
 mark_as_advanced(PHYSFS_BUILD_TEST)
+
+if(VITA)
+    set(PHYSFS_BUILD_TEST FALSE)
+endif()
+
 if(PHYSFS_BUILD_TEST)
     find_path(READLINE_H readline/readline.h)
     find_path(HISTORY_H readline/history.h)

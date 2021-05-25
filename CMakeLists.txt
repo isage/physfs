@@ -94,11 +94,6 @@ set(PHYSFS_SRCS
 
 if(VITA)
     set(PHYSFS_SRCS ${PHYSFS_SRCS} src/physfs_platform_vita.c)
-    if(DOLCESDK)
-        add_definitions("-D_DOLCESDK")
-    else()
-        add_definitions("-D_VITASDK")
-    endif()
 endif()
 
 # Archivers ...

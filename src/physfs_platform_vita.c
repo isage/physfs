@@ -17,21 +17,10 @@
 #include <unistd.h>
 
 #include <psp2/kernel/error.h>
-#if defined(_DOLCESDK)
-#include <psp2/kernel/iofilemgr.h>
-#include <psp2common/kernel/threadmgr.h>
-#else
-#define sceIoSyncByFd sceIoSyncByFd_orig
 #include <psp2/io/dirent.h>
 #include <psp2/io/stat.h>
 #include <psp2/io/fcntl.h>
 #include <psp2/kernel/threadmgr.h>
-#define SCE_STM_ISREG SCE_S_ISREG
-#define SCE_STM_ISDIR SCE_SO_ISDIR
-#define SCE_STM_RWU         00600
-#undef sceIoSyncByFd
-int sceIoSyncByFd(SceUID fd, int flag);
-#endif
 #include <psp2/rtc.h>
 #include <fcntl.h>
 
@@ -67,7 +56,7 @@ static void *doOpen(const char *filename, int mode)
     /* O_APPEND doesn't actually behave as we'd like. */
     mode &= ~SCE_O_APPEND;
 
-    fd = sceIoOpen(filename, mode, SCE_STM_RWU);
+    fd = sceIoOpen(filename, mode, 600);
     BAIL_IF(fd < 0, PHYSFS_ERR_IO, NULL);
 
     if (appending)
@@ -168,7 +157,7 @@ int __PHYSFS_platformFlush(void *opaque)
 {
     SceUID fd = *((int *) opaque);
 
-    BAIL_IF(sceIoSyncByFd(fd, 0) < 0, PHYSFS_ERR_IO, 0);
+    BAIL_IF(sceIoSyncByFd(fd/*, 0*/) < 0, PHYSFS_ERR_IO, 0);
     return(1);
 } /* __PHYSFS_platformFlush */
 
@@ -299,13 +288,13 @@ int __PHYSFS_platformStat(const char *fname, PHYSFS_Stat *st, const int follow)
 
     BAIL_IF(rc < 0, PHYSFS_ERR_IO, 0);
 
-    if (SCE_STM_ISREG(statbuf.st_mode))
+    if (SCE_S_ISREG(statbuf.st_mode))
     {
         st->filetype = PHYSFS_FILETYPE_REGULAR;
         st->filesize = statbuf.st_size;
     } /* if */
 
-    else if(SCE_STM_ISDIR(statbuf.st_mode))
+    else if(SCE_S_ISDIR(statbuf.st_mode))
     {
         st->filetype = PHYSFS_FILETYPE_DIRECTORY;
         st->filesize = 0;
